@@ -30,7 +30,7 @@
 
 ### 更新Stable Diffusion WebUI汉化版
 1. 通过上面两种方法安装好stable-diffusion-webui汉化版。
-2. 右键 “git besh here”，输入`git clone https://github.com/VinsonLaro/stable-diffusion-webui_chinese`。
+2. 右键 “git besh here”，输入`git pull`。
 3. 运行 `webui-user.bat`。
 
 
