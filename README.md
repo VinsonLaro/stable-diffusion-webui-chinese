@@ -5,7 +5,7 @@
 
 ## 解释说明
 
-此版本为[Stable Diffusion Web UI](https://github.com/Fndroid/clash_for_windows_pkg/releases)原版汉化页面。
+此版本为[Stable Diffusion Web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)原版汉化页面。
 
 当前版本为1009-1400，即基于官方webui 10月9日14点之前的最新版本进行的汉化。
 
