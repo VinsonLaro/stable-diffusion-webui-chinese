@@ -5,7 +5,7 @@
 
 ## 解释说明
 
-此版本为[Clash for Windows](https://github.com/Fndroid/clash_for_windows_pkg/releases)原版汉化页面。
+此版本为[Stable Diffusion Web UI](https://github.com/Fndroid/clash_for_windows_pkg/releases)原版汉化页面。
 
 ⚠️汉化永久免费，请注意欺诈！
 
