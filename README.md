@@ -7,8 +7,8 @@
 
 此版本为[Stable Diffusion Web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)原版汉化页面。
 
+版本号说明：
 当前版本为1011-1300，即基于官方webui 10月11日13点之前的最新版本进行的汉化。
-
 
 ⚠️汉化免费，请注意欺诈！
 
