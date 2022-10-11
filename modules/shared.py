@@ -25,6 +25,7 @@ parser.add_argument("--ckpt-dir", type=str, default=None, help="Path to director
 parser.add_argument("--gfpgan-dir", type=str, help="GFPGAN directory", default=('./src/gfpgan' if os.path.exists('./src/gfpgan') else './GFPGAN'))
 parser.add_argument("--gfpgan-model", type=str, help="GFPGAN model file name", default=None)
 parser.add_argument("--no-half", action='store_true', help="do not switch the model to 16-bit floats")
+parser.add_argument("--no-half-vae", action='store_true', help="do not switch the VAE model to 16-bit floats")
 parser.add_argument("--no-progressbar-hiding", action='store_true', help="do not hide progressbar in gradio UI (we hide it because it slows down ML if you have hardware acceleration in browser)")
 parser.add_argument("--max-batch-count", type=int, default=16, help="maximum batch count value for the UI")
 parser.add_argument("--embeddings-dir", type=str, default=os.path.join(script_path, 'embeddings'), help="embeddings directory for textual inversion (default: embeddings)")
@@ -45,6 +46,7 @@ parser.add_argument("--swinir-models-path", type=str, help="Path to directory wi
 parser.add_argument("--ldsr-models-path", type=str, help="Path to directory with LDSR model file(s).", default=os.path.join(models_path, 'LDSR'))
 parser.add_argument("--xformers", action='store_true', help="enable xformers for cross attention layers")
 parser.add_argument("--force-enable-xformers", action='store_true', help="enable xformers for cross attention layers regardless of whether the checking code thinks you can run it; do not make bug reports if this fails to work")
+parser.add_argument("--deepdanbooru", action='store_true', help="enable deepdanbooru interrogator")
 parser.add_argument("--opt-split-attention", action='store_true', help="force-enables cross-attention layer optimization. By default, it's on for torch.cuda and off for other torch devices.")
 parser.add_argument("--disable-opt-split-attention", action='store_true', help="force-disables cross-attention layer optimization")
 parser.add_argument("--opt-split-attention-v1", action='store_true', help="enable older version of split attention optimization that does not consume all the VRAM it can find")
@@ -64,6 +66,8 @@ parser.add_argument("--autolaunch", action='store_true', help="open the webui UR
 parser.add_argument("--use-textbox-seed", action='store_true', help="use textbox for seeds in UI (no up/down, but possible to input long seeds)", default=False)
 parser.add_argument("--disable-console-progressbars", action='store_true', help="do not output progressbars to console", default=False)
 parser.add_argument("--enable-console-prompts", action='store_true', help="print prompts to console when generating with txt2img and img2img", default=False)
+parser.add_argument('--vae-path', type=str, help='Path to Variational Autoencoders model', default=None)
+parser.add_argument("--disable-safe-unpickle", action='store_true', help="disable checking pytorch models for malicious code", default=False)
 
 
 cmd_opts = parser.parse_args()
@@ -78,11 +82,8 @@ parallel_processing_allowed = not cmd_opts.lowvram and not cmd_opts.medvram
 xformers_available = False
 config_filename = cmd_opts.ui_settings_file
 
-hypernetworks = hypernetwork.load_hypernetworks(os.path.join(models_path, 'hypernetworks'))
-
-
-def selected_hypernetwork():
-    return hypernetworks.get(opts.sd_hypernetwork, None)
+hypernetworks = hypernetwork.list_hypernetworks(os.path.join(models_path, 'hypernetworks'))
+loaded_hypernetwork = None
 
 
 class State:
@@ -132,13 +133,14 @@ def realesrgan_models_names():
 
 
 class OptionInfo:
-    def __init__(self, default=None, label="", component=None, component_args=None, onchange=None):
+    def __init__(self, default=None, label="", component=None, component_args=None, onchange=None, show_on_main_page=False):
         self.default = default
         self.label = label
         self.component = component
         self.component_args = component_args
         self.onchange = onchange
         self.section = None
+        self.show_on_main_page = show_on_main_page
 
 
 def options_section(section_identifier, options_dict):
@@ -161,16 +163,17 @@ options_templates.update(options_section(('saving-images', "保存图像和网�
     "grid_format": OptionInfo('png', '网格的文件格式/File format for grids'),
     "grid_extended_filename": OptionInfo(False, "保存网格时将扩展信息（图像生成种子、关键词语句）添加到文件名/Add extended info (seed, prompt) to filename when saving grid"),
     "grid_only_if_multiple": OptionInfo(True, "不保存由一张图像组成的网格/Do not save grids consisting of one picture"),
-    "n_rows": OptionInfo(-1, "网格行数:为-1时会进行自动检测，为0时会使其与批量大小相同/Grid row count; use -1 for autodetect and 0 for it to be same as batch size", gr.Slider, {"minimum": -1, "maximum": 16, "step": 1}),
+    "n_rows": OptionInfo(-1, "网格行数:为-1时会进行自动检测,为0时会使其与批量大小相同/Grid row count; use -1 for autodetect and 0 for it to be same as batch size", gr.Slider, {"minimum": -1, "maximum": 16, "step": 1}),
 
     "enable_pnginfo": OptionInfo(True, "将关于生成参数的文本信息以块的形式保存到png文件中/Save text information about generation parameters as chunks to png files"),
-    "save_txt": OptionInfo(False, "在每一个带有生成参数的图像旁，创建一个文本文件/Create a text file next to every image with generation parameters."),
+    "save_txt": OptionInfo(False, "在每一个带有生成参数的图像旁,创建一个文本文件/Create a text file next to every image with generation parameters."),
     "save_images_before_face_restoration": OptionInfo(False, "在面部修复前保存一份图像的副本/Save a copy of image before doing face restoration."),
     "jpeg_quality": OptionInfo(80, "保存jpeg图像的质量/Quality for saved jpeg images", gr.Slider, {"minimum": 1, "maximum": 100, "step": 1}),
-    "export_for_4chan": OptionInfo(True, "如果PNG大于4MB或任何尺寸大于4000，缩小尺寸并保存为JPG/If PNG image is larger than 4MB or any dimension is larger than 4000, downscale and save copy as JPG"),
+    "export_for_4chan": OptionInfo(True, "如果PNG大于4MB或任何尺寸大于4000,缩小尺寸并保存为JPG/If PNG image is larger than 4MB or any dimension is larger than 4000, downscale and save copy as JPG"),
 
-    "use_original_name_batch": OptionInfo(False, "在额外标签的批处理过程中，为输出文件名使用原始名称/Use original name for output filename during batch process in extras tab"),
-    "save_selected_only": OptionInfo(True, "使用“保存”按钮时，只保存一个选定的图像/When using 'Save' button, only save a single selected image"),
+    "use_original_name_batch": OptionInfo(False, "在额外标签的批处理过程中,为输出文件名使用原始名称/Use original name for output filename during batch process in extras tab"),
+    "save_selected_only": OptionInfo(True, "使用“保存”按钮时,只保存一个选定的图像/When using 'Save' button, only save a single selected image"),
+    "do_not_add_watermark": OptionInfo(False, "不在图像中添加水印/Do not add watermark to images"),
 }))
 
 options_templates.update(options_section(('saving-paths', "保存路径/Paths for saving"), {
@@ -187,7 +190,7 @@ options_templates.update(options_section(('saving-paths', "保存路径/Paths fo
 options_templates.update(options_section(('saving-to-dirs', "保存到目录/Saving to a directory"), {
     "save_to_dirs": OptionInfo(False, "将图像保存到子目录/Save images to a subdirectory"),
     "grid_save_to_dirs": OptionInfo(False, "将网格保存到子目录/Save grids to a subdirectory"),
-    "use_save_to_dirs_for_ui": OptionInfo(False, "当使用“保存”按钮时，将图像保存到子目录When using \"Save\" button, save images to a subdirectory"),
+    "use_save_to_dirs_for_ui": OptionInfo(False, "当使用“保存”按钮时,将图像保存到子目录When using \"Save\" button, save images to a subdirectory"),
     "directories_filename_pattern": OptionInfo("", "目录命名方式/Directory name pattern"),
     "directories_max_prompt_words": OptionInfo(8, "最大提示词[prompt_words]模式/Max prompt words for [prompt_words] pattern", gr.Slider, {"minimum": 1, "maximum": 20, "step": 1}),
 }))
@@ -215,18 +218,18 @@ options_templates.update(options_section(('system', "系统System"), {
 }))
 
 options_templates.update(options_section(('sd', "Stable Diffusion"), {
-    "sd_model_checkpoint": OptionInfo(None, "Stable Diffusion模型/Stable Diffusion checkpoint", gr.Dropdown, lambda: {"choices": modules.sd_models.checkpoint_tiles()}),
+    "sd_model_checkpoint": OptionInfo(None, "Stable Diffusion模型/Stable Diffusion checkpoint", gr.Dropdown, lambda: {"choices": modules.sd_models.checkpoint_tiles()}, show_on_main_page=True),
     "sd_hypernetwork": OptionInfo("None", "Stable Diffusion精细超网络/Stable Diffusion finetune hypernetwork", gr.Dropdown, lambda: {"choices": ["None"] + [x for x in hypernetworks.keys()]}),
     "img2img_color_correction": OptionInfo(False, "对img2img生成的结果应用颜色校正来与原始颜色相匹配/Apply color correction to img2img results to match original colors."),
     "save_images_before_color_correction": OptionInfo(False, "在对img2img生成的结果应用颜色校正之前,保存图像的副本/Save a copy of image before applying color correction to img2img results"),    
     "img2img_fix_steps": OptionInfo(False, "使用img2img,完全执行滑块指定的步数(通常情况下,降噪越少,执行的步数就越少)/With img2img, do exactly the amount of steps the slider specifies (normally you'd do less with less denoising)."),
     "enable_quantization": OptionInfo(False, "在K-diffusion采样器中启动量化来获得更清晰简洁的结果,这可能会改变现有的图像生成种子,需要重新启动才能应用/Enable quantization in K samplers for sharper and cleaner results. This may change existing seeds. Requires restart to apply."),
-    "enable_emphasis": OptionInfo(True, "强调:模型更加注重于(文本)内的文本，少量注重于[文本]内的文本/Emphasis: use (text) to make model pay more attention to text and [text] to make it pay less attention"),
+    "enable_emphasis": OptionInfo(True, "强调:模型更加注重于(文本)内的文本,少量注重于[文本]内的文本/Emphasis: use (text) to make model pay more attention to text and [text] to make it pay less attention"),
     "use_old_emphasis_implementation": OptionInfo(False, "使用旧的强调实现,可以用来繁殖老种子/Use old emphasis implementation. Can be useful to reproduce old seeds."),
     "enable_batch_seeds": OptionInfo(True, "使用K-diffusion采样器批量生成与生成单个图像时相同的图像/Make K-diffusion samplers produce same images in a batch as when making a single image"),
     "filter_nsfw": OptionInfo(False, "过滤NSFW(不适合在公共场合或者上班的时候浏览)内容/Filter NSFW content"),
-    'CLIP_ignore_last_layers': OptionInfo(0, "忽略CLIP模型的最后几层/Ignore last layers of CLIP model", gr.Slider, {"minimum": 0, "maximum": 5, "step": 1}),
-    "random_artist_categories": OptionInfo([], "当使用随机关键词按钮时，允许选择随机艺术家类别/Allowed categories for random artists selection when using the Roll button", gr.CheckboxGroup, {"choices": artist_db.categories()}),
+    'CLIP_ignore_last_layers': OptionInfo(0, "在CLIP模型的最后几层停止/Stop At last layers of CLIP model", gr.Slider, {"minimum": 0, "maximum": 5, "step": 1}),
+    "random_artist_categories": OptionInfo([], "当使用随机关键词按钮时,允许选择随机艺术家类别/Allowed categories for random artists selection when using the Roll button", gr.CheckboxGroup, {"choices": artist_db.categories()}),
 }))
 
 options_templates.update(options_section(('interrogate', "询问设置/Interrogate Options"), {
@@ -244,6 +247,7 @@ options_templates.update(options_section(('ui', "用户界面/User interface"), 
     "return_grid": OptionInfo(True, "在web中显示网格/Show grid in results for web"),
        "do_not_show_images": OptionInfo(False, "网页不显示任何生成图像的结果/Do not show any images in results for web"),
     "add_model_hash_to_info": OptionInfo(True, "在生成信息中添加模型哈希/Add model hash to generation information"),
+    "add_model_name_to_info": OptionInfo(False, "将模型名称添加到生成信息中/Add model name to generation information"),
     "font": OptionInfo("", "具有文本的图像网格的字体/Font for image grids that have text"),
     "js_modal_lightbox": OptionInfo(True, "启用整页图像查看界面/Enable full page image viewer"),
     "js_modal_lightbox_initialy_zoomed": OptionInfo(True, "在整页图像查看界面中默认显示放大的图像/Show images zoomed in by default in full page image viewer"),
@@ -258,15 +262,15 @@ options_templates.update(options_section(('sampler-params', "采样工具参数/
   's_churn': OptionInfo(0.0, "sigma混合/sigma churn", gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
   's_tmin':  OptionInfo(0.0, "sigma时长/sigma tmin",  gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
   's_noise': OptionInfo(1.0, "sigma噪点/sigma noise", gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
+  'eta_noise_seed_delta': OptionInfo(0, "delta噪声种子/Eta noise seed delta", gr.Number, {"precision": 0}),
 }))
 
-options_templates.update(options_section(('statement', "Stable Diffusion webui版个人汉化说明"), {
+options_templates.update(options_section(('statement', "Stable Diffusion webui版个人汉化说明-10111300"), {
     "statement1": OptionInfo('本汉化仅供学习交流使用'),
     "statement2": OptionInfo('webui如有新界面,我会尽快更新'),
     "statement3": OptionInfo('因为本人不是深度学习从业人员,汉化上不保证准确性'),
     "statement4": OptionInfo('欢迎给出更好的翻译建议'),
     "statement5": OptionInfo('交流群:764844927'),
-    "statement6": OptionInfo('汉化版本:1.0-10091400'),
 }))
 
 class Options:
