@@ -1,0 +1,15 @@
+汉化不保证不会，请自行备份
+
+可以直接复制git汉化包内的文件到stable diffusion webui软件目录下
+这样会把webui的git项目远程仓库
+设置成我发布的stable-diffusion-webui-chinese，就是汉化版webui
+也会直接汉化好
+后继也可以使用”git pull“更新最新的webui汉化版
+
+只需汉化webui
+先覆盖官方webui到stable diffusion webui软件目录，再覆盖汉化文件
+
+恢复官方webui
+覆盖官方webui到stable diffusion webui软件目录
+
+使用方法访问https://space.bilibili.com/22970812
