@@ -39,6 +39,7 @@ import modules.generation_parameters_copypaste
 from modules import prompt_parser
 from modules.images import save_image
 import modules.textual_inversion.ui
+import modules.hypernetworks.ui
 
 # this is a fix for Windows users. Without it, javascript files will be served with text/html content-type and the browser will not show any UI
 mimetypes.init()
@@ -49,6 +50,11 @@ if not cmd_opts.share and not cmd_opts.listen:
     # fix gradio phoning home
     gradio.utils.version_check = lambda: None
     gradio.utils.get_local_ip_address = lambda: '127.0.0.1'
+
+if cmd_opts.ngrok != None:
+    import modules.ngrok as ngrok
+    print('ngrok authtoken detected, trying to connect...')
+    ngrok.connect(cmd_opts.ngrok, cmd_opts.port if cmd_opts.port != None else 7860)
 
 
 def gr_show(visible=True):
@@ -175,8 +181,15 @@ def wrap_gradio_call(func, extra_outputs=None):
         try:
             res = list(func(*args, **kwargs))
         except Exception as e:
+            # When printing out our debug argument list, do not print out more than a MB of text
+            max_debug_str_len = 131072 # (1024*1024)/8
+
             print("Error completing request", file=sys.stderr)
-            print("Arguments:", args, kwargs, file=sys.stderr)
+            argStr = f"Arguments: {str(args)} {str(kwargs)}"
+            print(argStr[:max_debug_str_len], file=sys.stderr)
+            if len(argStr) > max_debug_str_len:
+                print(f"(Argument list truncated at {max_debug_str_len}/{len(argStr)} characters)", file=sys.stderr)
+
             print(traceback.format_exc(), file=sys.stderr)
 
             shared.state.job = ""
@@ -428,7 +441,10 @@ def create_toprow(is_img2img):
 
             with gr.Row():
                 with gr.Column(scale=8):
-                    negative_prompt = gr.Textbox(label="Negative prompt", elem_id="negative_prompt", show_label=False, placeholder="Negative prompt", lines=2)
+                    with gr.Row():
+                        negative_prompt = gr.Textbox(label="Negative prompt", elem_id="negative_prompt", show_label=False, placeholder="Negative prompt", lines=2)
+                with gr.Column(scale=1, elem_id="roll_col"):
+                    sh = gr.Button(elem_id="sh", visible=True)                           
 
                 with gr.Column(scale=1, elem_id="style_neg_col"):
                     prompt_style2 = gr.Dropdown(label="预设2/Style 2", elem_id=f"{id_part}_style2_index", choices=[k for k, v in shared.prompt_styles.styles.items()], value=next(iter(shared.prompt_styles.styles.keys())), visible=len(shared.prompt_styles.styles) > 1)
@@ -1022,7 +1038,20 @@ def create_ui(wrap_gradio_gpu_call):
                             gr.HTML(value="")
 
                         with gr.Column():
-                            create_embedding = gr.Button(value="创建/Create", variant='primary')
+                            create_embedding = gr.Button(value="创建embedding/Create embedding", variant='primary')
+
+                with gr.Group():
+                    gr.HTML(value="<p style='margin-bottom: 0.7em'>创建一个新的超网络/Create a new hypernetwork</p>")
+
+                    new_hypernetwork_name = gr.Textbox(label="名字/Name")
+                    new_hypernetwork_sizes = gr.CheckboxGroup(label="模块/Modules", value=["768", "320", "640", "1280"], choices=["768", "320", "640", "1280"])
+
+                    with gr.Row():
+                        with gr.Column(scale=3):
+                            gr.HTML(value="")
+
+                        with gr.Column():
+                            create_hypernetwork = gr.Button(value="创建超网格/Create hypernetwork", variant='primary')
 
                 with gr.Group():
                     gr.HTML(value="<p style='margin-bottom: 0.7em'>预处理图像/Preprocess images</p>")
@@ -1036,6 +1065,10 @@ def create_ui(wrap_gradio_gpu_call):
                         process_flip = gr.Checkbox(label='创建反转副本/Create flipped copies')
                         process_split = gr.Checkbox(label='将超大图像一分为二/Split oversized images into two')
                         process_caption = gr.Checkbox(label='使用BLIP标题作为文件名/Use BLIP caption as filename')
+                        if cmd_opts.deepdanbooru:
+                            process_caption_deepbooru = gr.Checkbox(label='使用deepbooru标题作为文件名/Use deepbooru caption as filename')
+                        else:
+                            process_caption_deepbooru = gr.Checkbox(label='使用deepbooru标题作为文件名/se deepbooru caption as filename', visible=False)
 
                     with gr.Row():
                         with gr.Column(scale=3):
@@ -1045,9 +1078,10 @@ def create_ui(wrap_gradio_gpu_call):
                             run_preprocess = gr.Button(value="预处理/Preprocess", variant='primary')
 
                 with gr.Group():
-                    gr.HTML(value="<p style='margin-bottom: 0.7em'>embedding训练;必须指定一个包含512x512图像的目录/Train an embedding; must specify a directory with a set of 512x512 images</p>")
-                    train_embedding_name = gr.Dropdown(label='embedding模型/Embedding', choices=sorted(sd_hijack.model_hijack.embedding_db.word_embeddings.keys()))
-                    learn_rate = gr.Number(label='学习率/Learning rate', value=5.0e-03)
+                    gr.HTML(value="<p style='margin-bottom: 0.7em'>训练一个embedding;必须选择具有一组1:1比例图像的目录/Train an embedding; must specify a directory with a set of 1:1 ratio images</p>")
+                    train_embedding_name = gr.Dropdown(label='Embedding模型/Embedding', choices=sorted(sd_hijack.model_hijack.embedding_db.word_embeddings.keys()))
+                    train_hypernetwork_name = gr.Dropdown(label='超网络/Hypernetwork', choices=[x for x in shared.hypernetworks.keys()])
+                    learn_rate = gr.Textbox(label='学习率/Learning rate', placeholder="Learning rate", value="0.005")
                     dataset_directory = gr.Textbox(label='数据集目录/Dataset directory', placeholder="Path to directory with input images")
                     log_directory = gr.Textbox(label='日志目录/Log directory', placeholder="Path to directory where to write outputs", value="textual_inversion")
                     template_file = gr.Textbox(label='关键词语句模板文件/Prompt template file', value=os.path.join(script_path, "textual_inversion_templates", "style_filewords.txt"))
@@ -1057,15 +1091,12 @@ def create_ui(wrap_gradio_gpu_call):
                     num_repeats = gr.Number(label='每个周期的单个输入图像的重复次数/Number of repeats for a single input image per epoch', value=100, precision=0)
                     create_image_every = gr.Number(label='每N步保存一个图像到日志目录,0为禁用/Save an image to log directory every N steps, 0 to disable', value=500, precision=0)
                     save_embedding_every = gr.Number(label='每N步保存一份embedding到日志目录的副本,0表示禁用/Save a copy of embedding to log directory every N steps, 0 to disable', value=500, precision=0)
+                    preview_image_prompt = gr.Textbox(label='预览关键词语句/Preview prompt', value="")
 
                     with gr.Row():
-                        with gr.Column(scale=2):
-                            gr.HTML(value="")
-
-                        with gr.Column():
-                            with gr.Row():
-                                interrupt_training = gr.Button(value="中断/Interrupt")
-                                train_embedding = gr.Button(value="训练/Train", variant='primary')
+                        interrupt_training = gr.Button(value="中止/Interrupt")
+                        train_hypernetwork = gr.Button(value="训练超网络/Train Hypernetwork", variant='primary')
+                        train_embedding = gr.Button(value="训练Embedding/Train Embedding", variant='primary')
 
             with gr.Column():
                 progressbar = gr.HTML(elem_id="ti_progressbar")
@@ -1091,6 +1122,19 @@ def create_ui(wrap_gradio_gpu_call):
             ]
         )
 
+        create_hypernetwork.click(
+            fn=modules.hypernetworks.ui.create_hypernetwork,
+            inputs=[
+                new_hypernetwork_name,
+                new_hypernetwork_sizes,
+            ],
+            outputs=[
+                train_hypernetwork_name,
+                ti_output,
+                ti_outcome,
+            ]
+        )
+
         run_preprocess.click(
             fn=wrap_gradio_gpu_call(modules.textual_inversion.ui.preprocess, extra_outputs=[gr.update()]),
             _js="start_training_textual_inversion",
@@ -1102,6 +1146,7 @@ def create_ui(wrap_gradio_gpu_call):
                 process_flip,
                 process_split,
                 process_caption,
+                process_caption_deepbooru
             ],
             outputs=[
                 ti_output,
@@ -1124,6 +1169,27 @@ def create_ui(wrap_gradio_gpu_call):
                 create_image_every,
                 save_embedding_every,
                 template_file,
+                preview_image_prompt,
+            ],
+            outputs=[
+                ti_output,
+                ti_outcome,
+            ]
+        )
+
+        train_hypernetwork.click(
+            fn=wrap_gradio_gpu_call(modules.hypernetworks.ui.train_hypernetwork, extra_outputs=[gr.update()]),
+            _js="start_training_textual_inversion",
+            inputs=[
+                train_hypernetwork_name,
+                learn_rate,
+                dataset_directory,
+                log_directory,
+                steps,
+                create_image_every,
+                save_embedding_every,
+                template_file,
+                preview_image_prompt,
             ],
             outputs=[
                 ti_output,
@@ -1136,6 +1202,7 @@ def create_ui(wrap_gradio_gpu_call):
             inputs=[],
             outputs=[],
         )
+
 
     def create_setting_component(key):
         def fun():
@@ -1301,6 +1368,7 @@ Requested path was: {f}
             shared.state.interrupt()
             settings_interface.gradio_ref.do_restart = True
 
+
         restart_gradio.click(
             fn=request_restart,
             inputs=[],
@@ -1342,7 +1410,7 @@ Requested path was: {f}
         
         with gr.Tabs() as tabs:
             for interface, label, ifid in interfaces:
-                with gr.TabItem(label, id=ifid):
+                with gr.TabItem(label, id=ifid, elem_id='tab_' + ifid):
                     interface.render()
 
         if os.path.exists(os.path.join(script_path, "notification.mp3")):

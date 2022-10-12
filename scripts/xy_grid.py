@@ -10,7 +10,8 @@ import numpy as np
 import modules.scripts as scripts
 import gradio as gr
 
-from modules import images, hypernetwork
+from modules import images
+from modules.hypernetworks import hypernetwork
 from modules.processing import process_images, Processed, get_correct_sampler
 from modules.shared import opts, cmd_opts, state
 import modules.shared as shared
@@ -27,6 +28,9 @@ def apply_field(field):
 
 
 def apply_prompt(p, x, xs):
+    if xs[0] not in p.prompt and xs[0] not in p.negative_prompt:
+        raise RuntimeError(f"Prompt S/R did not find {xs[0]} in prompt or negative prompt.")
+
     p.prompt = p.prompt.replace(xs[0], x)
     p.negative_prompt = p.negative_prompt.replace(xs[0], x)
 
@@ -134,12 +138,12 @@ axis_options = [
     AxisOption("模型名称/Checkpoint name", str, apply_checkpoint, format_value),
         AxisOption("超网络/Hypernetwork", str, apply_hypernetwork, format_value),
     AxisOption("Sigma混合/Sigma Churn", float, apply_field("s_churn"),  format_value_add_label),
-    AxisOption("Sigma最小/Sigma min",   float, apply_field("s_tmin"),   format_value_add_label),
-    AxisOption("Sigma最大/Sigma max",   float, apply_field("s_tmax"),   format_value_add_label),
+    AxisOption("Sigma最小/Sigma min", float, apply_field("s_tmin"),   format_value_add_label),
+    AxisOption("Sigma最大/Sigma max", float, apply_field("s_tmax"),   format_value_add_label),
     AxisOption("Sigma噪点/Sigma noise", float, apply_field("s_noise"),  format_value_add_label),
-    AxisOption("DDIM Eta",    float, apply_field("ddim_eta"), format_value_add_label),
+    AxisOption("Eta", float, apply_field("eta"), format_value_add_label),
     AxisOption("Clip跳过/Clip skip", int, apply_clip_skip, format_value_add_label),
-    AxisOptionImg2Img("去噪/Denoising", float, apply_field("denoising_strength"), format_value_add_label),   # as as it is now all AxisOptionImg2Img items must go after AxisOption ones
+    AxisOptionImg2Img("去噪/Denoising", float, apply_field("denoising_strength"), format_value_add_label),  # as it is now all AxisOptionImg2Img items must go after AxisOption ones
 ]
 
 

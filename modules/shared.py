@@ -13,7 +13,8 @@ import modules.memmon
 import modules.sd_models
 import modules.styles
 import modules.devices as devices
-from modules import sd_samplers, hypernetwork
+from modules import sd_samplers
+from modules.hypernetworks import hypernetwork
 from modules.paths import models_path, script_path, sd_path
 
 sd_model_file = os.path.join(script_path, 'model.ckpt')
@@ -29,6 +30,7 @@ parser.add_argument("--no-half-vae", action='store_true', help="do not switch th
 parser.add_argument("--no-progressbar-hiding", action='store_true', help="do not hide progressbar in gradio UI (we hide it because it slows down ML if you have hardware acceleration in browser)")
 parser.add_argument("--max-batch-count", type=int, default=16, help="maximum batch count value for the UI")
 parser.add_argument("--embeddings-dir", type=str, default=os.path.join(script_path, 'embeddings'), help="embeddings directory for textual inversion (default: embeddings)")
+parser.add_argument("--hypernetwork-dir", type=str, default=os.path.join(models_path, 'hypernetworks'), help="hypernetwork directory")
 parser.add_argument("--allow-code", action='store_true', help="allow custom script execution from webui")
 parser.add_argument("--medvram", action='store_true', help="enable stable diffusion model optimizations for sacrificing a little speed for low VRM usage")
 parser.add_argument("--lowvram", action='store_true', help="enable stable diffusion model optimizations for sacrificing a lot of speed for very low VRM usage")
@@ -36,6 +38,7 @@ parser.add_argument("--always-batch-cond-uncond", action='store_true', help="dis
 parser.add_argument("--unload-gfpgan", action='store_true', help="does not do anything.")
 parser.add_argument("--precision", type=str, help="evaluate at this precision", choices=["full", "autocast"], default="autocast")
 parser.add_argument("--share", action='store_true', help="use share=True for gradio and make the UI accessible through their site (doesn't work for me but you might have better luck)")
+parser.add_argument("--ngrok", type=str, help="ngrok authtoken, alternative to gradio --share", default=None)
 parser.add_argument("--codeformer-models-path", type=str, help="Path to directory with codeformer model file(s).", default=os.path.join(models_path, 'Codeformer'))
 parser.add_argument("--gfpgan-models-path", type=str, help="Path to directory with GFPGAN model file(s).", default=os.path.join(models_path, 'GFPGAN'))
 parser.add_argument("--esrgan-models-path", type=str, help="Path to directory with ESRGAN model file(s).", default=os.path.join(models_path, 'ESRGAN'))
@@ -47,9 +50,10 @@ parser.add_argument("--ldsr-models-path", type=str, help="Path to directory with
 parser.add_argument("--xformers", action='store_true', help="enable xformers for cross attention layers")
 parser.add_argument("--force-enable-xformers", action='store_true', help="enable xformers for cross attention layers regardless of whether the checking code thinks you can run it; do not make bug reports if this fails to work")
 parser.add_argument("--deepdanbooru", action='store_true', help="enable deepdanbooru interrogator")
-parser.add_argument("--opt-split-attention", action='store_true', help="force-enables cross-attention layer optimization. By default, it's on for torch.cuda and off for other torch devices.")
-parser.add_argument("--disable-opt-split-attention", action='store_true', help="force-disables cross-attention layer optimization")
+parser.add_argument("--opt-split-attention", action='store_true', help="force-enables Doggettx's cross-attention layer optimization. By default, it's on for torch cuda.")
+parser.add_argument("--opt-split-attention-invokeai", action='store_true', help="force-enables InvokeAI's cross-attention layer optimization. By default, it's on when cuda is unavailable.")
 parser.add_argument("--opt-split-attention-v1", action='store_true', help="enable older version of split attention optimization that does not consume all the VRAM it can find")
+parser.add_argument("--disable-opt-split-attention", action='store_true', help="force-disables cross-attention layer optimization")
 parser.add_argument("--use-cpu", nargs='+',choices=['SD', 'GFPGAN', 'BSRGAN', 'ESRGAN', 'SCUNet', 'CodeFormer'], help="use CPU as torch device for specified modules", default=[])
 parser.add_argument("--listen", action='store_true', help="launch gradio with 0.0.0.0 as server name, allowing to respond to network requests")
 parser.add_argument("--port", type=int, help="launch gradio with given server port, you need root/admin rights for ports < 1024, defaults to 7860 if available", default=None)
@@ -82,8 +86,16 @@ parallel_processing_allowed = not cmd_opts.lowvram and not cmd_opts.medvram
 xformers_available = False
 config_filename = cmd_opts.ui_settings_file
 
-hypernetworks = hypernetwork.list_hypernetworks(os.path.join(models_path, 'hypernetworks'))
+os.makedirs(cmd_opts.hypernetwork_dir, exist_ok=True)
+hypernetworks = hypernetwork.list_hypernetworks(cmd_opts.hypernetwork_dir)
 loaded_hypernetwork = None
+
+
+def reload_hypernetworks():
+    global hypernetworks
+
+    hypernetworks = hypernetwork.list_hypernetworks(cmd_opts.hypernetwork_dir)
+    hypernetwork.load_hypernetwork(opts.sd_hypernetwork)
 
 
 class State:
@@ -217,9 +229,13 @@ options_templates.update(options_section(('system', "系统System"), {
     "multiple_tqdm": OptionInfo(True, "向控制台添加第二个进度条,显示整个作业的进度,不可用于PyCharm控制台/Add a second progress bar to the console that shows progress for an entire job. Broken in PyCharm console."),
 }))
 
+options_templates.update(options_section(('training', "训练/Training"), {
+    "unload_models_when_training": OptionInfo(False, "训练时从显存中清除VAE和CLIP/Unload VAE and CLIP from VRAM when training"),
+}))
+
 options_templates.update(options_section(('sd', "Stable Diffusion"), {
     "sd_model_checkpoint": OptionInfo(None, "Stable Diffusion模型/Stable Diffusion checkpoint", gr.Dropdown, lambda: {"choices": modules.sd_models.checkpoint_tiles()}, show_on_main_page=True),
-    "sd_hypernetwork": OptionInfo("None", "Stable Diffusion精细超网络/Stable Diffusion finetune hypernetwork", gr.Dropdown, lambda: {"choices": ["None"] + [x for x in hypernetworks.keys()]}),
+    "sd_hypernetwork": OptionInfo("None", "Stable Diffusion微调超网络/Stable Diffusion finetune hypernetwork", gr.Dropdown, lambda: {"choices": ["None"] + [x for x in hypernetworks.keys()]}),
     "img2img_color_correction": OptionInfo(False, "对img2img生成的结果应用颜色校正来与原始颜色相匹配/Apply color correction to img2img results to match original colors."),
     "save_images_before_color_correction": OptionInfo(False, "在对img2img生成的结果应用颜色校正之前,保存图像的副本/Save a copy of image before applying color correction to img2img results"),    
     "img2img_fix_steps": OptionInfo(False, "使用img2img,完全执行滑块指定的步数(通常情况下,降噪越少,执行的步数就越少)/With img2img, do exactly the amount of steps the slider specifies (normally you'd do less with less denoising)."),
@@ -227,6 +243,7 @@ options_templates.update(options_section(('sd', "Stable Diffusion"), {
     "enable_emphasis": OptionInfo(True, "强调:模型更加注重于(文本)内的文本,少量注重于[文本]内的文本/Emphasis: use (text) to make model pay more attention to text and [text] to make it pay less attention"),
     "use_old_emphasis_implementation": OptionInfo(False, "使用旧的强调实现,可以用来繁殖老种子/Use old emphasis implementation. Can be useful to reproduce old seeds."),
     "enable_batch_seeds": OptionInfo(True, "使用K-diffusion采样器批量生成与生成单个图像时相同的图像/Make K-diffusion samplers produce same images in a batch as when making a single image"),
+    "comma_padding_backtrack": OptionInfo(20, "当使用超过75个token时,从n个token内的最后一个逗号开始填充,以提高一致性/Increase coherency by padding from the last comma within n tokens when using more than 75 tokens", gr.Slider, {"minimum": 0, "maximum": 74, "step": 1 }),
     "filter_nsfw": OptionInfo(False, "过滤NSFW(不适合在公共场合或者上班的时候浏览)内容/Filter NSFW content"),
     'CLIP_stop_at_last_layers': OptionInfo(0, "在CLIP模型的最后几层停止/Stop At last layers of CLIP model", gr.Slider, {"minimum": 0, "maximum": 5, "step": 1}),
     "random_artist_categories": OptionInfo([], "当使用随机关键词按钮时,允许选择随机艺术家类别/Allowed categories for random artists selection when using the Roll button", gr.CheckboxGroup, {"choices": artist_db.categories()}),
@@ -238,8 +255,9 @@ options_templates.update(options_section(('interrogate', "询问设置/Interroga
     "interrogate_clip_num_beams": OptionInfo(1, "询问:集数数量来自BLIP/Interrogate: num_beams for BLIP", gr.Slider, {"minimum": 1, "maximum": 16, "step": 1}),
     "interrogate_clip_min_length": OptionInfo(24, "询问:最小描述长度(不包括艺术家等)/Interrogate: minimum description length (excluding artists, etc..)", gr.Slider, {"minimum": 1, "maximum": 128, "step": 1}),
     "interrogate_clip_max_length": OptionInfo(48, "询问:最大描述长度/Interrogate: maximum description length", gr.Slider, {"minimum": 1, "maximum": 256, "step": 1}),
-    "interrogate_clip_dict_limit": OptionInfo(1500, "询问:文本文件中的最大行数(0=无限制)、Interrogate: maximum number of lines in text file (0 = No limit)"),
-}))
+    "interrogate_deepbooru_score_threshold": OptionInfo(0.5, "询问:deepbooru置信度分数阈值/Interrogate: deepbooru score threshold", gr.Slider, {"minimum": 0, "maximum": 1, "step": 0.01}),
+    "deepbooru_sort_alpha": OptionInfo(True, "询问:deepbooru分类整理/Interrogate: deepbooru sort alphabetically"),
+    }))
 
 options_templates.update(options_section(('ui', "用户界面/User interface"), {
     "show_progressbar": OptionInfo(True, "显示进度条/Show progressbar"),
@@ -250,7 +268,7 @@ options_templates.update(options_section(('ui', "用户界面/User interface"), 
     "add_model_name_to_info": OptionInfo(False, "将模型名称添加到生成信息中/Add model name to generation information"),
     "font": OptionInfo("", "具有文本的图像网格的字体/Font for image grids that have text"),
     "js_modal_lightbox": OptionInfo(True, "启用整页图像查看界面/Enable full page image viewer"),
-    "js_modal_lightbox_initialy_zoomed": OptionInfo(True, "在整页图像查看界面中默认显示放大的图像/Show images zoomed in by default in full page image viewer"),
+    "js_modal_lightbox_initially_zoomed": OptionInfo(True, "在整页图像查看界面中默认显示放大的图像/Show images zoomed in by default in full page image viewer"),
     "show_progress_in_title": OptionInfo(True, "在浏览器标题中显示生成进度/Show generation progress in window title."),
 }))
 
@@ -262,7 +280,7 @@ options_templates.update(options_section(('sampler-params', "采样工具参数/
     's_churn': OptionInfo(0.0, "sigma混合/sigma churn", gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
     's_tmin':  OptionInfo(0.0, "sigma时长/sigma tmin",  gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
     's_noise': OptionInfo(1.0, "sigma噪点/sigma noise", gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
-    'eta_noise_seed_delta': OptionInfo(0, "delta噪声种子/Eta noise seed delta", gr.Number, {"precision": 0}),
+    'eta_noise_seed_delta': OptionInfo(0, "Eta噪声种子/Eta noise seed delta", gr.Number, {"precision": 0}),
 }))
 
 options_templates.update(options_section(('statement', "Stable Diffusion webui版个人汉化说明-10111300"), {

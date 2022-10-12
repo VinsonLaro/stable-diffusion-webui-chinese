@@ -10,7 +10,7 @@ titles = {
 	"生成次数/Batch count": "要生成多少次图像/How many batches of images to create",
 	"每次数量/Batch size": "一次生成多少张图像/How many image to create in a single batch",
     "CFG指数/CFG Scale": "分类器引导量化值-生成的图像要多大程度符合关键词描述-值越低越能产生更有创意的结果/Classifier Free Guidance Scale - how strongly the image should conform to prompt - lower values produce more creative results",
-    "图像生成种子/Seed": "决定随机数生成器的值-如果你创建的图像跟另一个图像具有相同的参数、关键词和随机数,你会得到同样的结果/A value that determines the output of random number generator - if you create an image with same parameters and seed as another image, you'll get the same result",
+    "图像生成种子/Seed": "决定随机数生成器的值-如果你创建的图像跟另一个图像具有相同的参数,关键词和随机数,你会得到同样的结果/A value that determines the output of random number generator - if you create an image with same parameters and seed as another image, you'll get the same result",
     "\u{1f3b2}\ufe0f": "将图像生成种子设置为-1,这样每次生成图像都会用一个新的随机数/Set seed to -1, which will cause a new random number to be used every time",
     "\u267b\ufe0f": "重复使用上一个图像生成种子,通常在它是随机的情况下是有用的/Reuse seed from last generation, mostly useful if it was randomed",
     "\u{1f3a8}": "随机将一个艺术家添加到关键词语句中/Add a random artist to the prompt.",
@@ -79,7 +79,7 @@ titles = {
     "高分辨率图像修复/Highres. fix": "仅使用2步来创建一个小分辨率且高解析度的图像,然后再不改变构图的情况下改进图像细节/Use a two step process to partially create an image at smaller resolution, upscale, and then improve details in it without changing composition",
     "隐空间强度/Scale latent": "在隐空间中对图像进行缩放。另一种方法是从潜在的表象中产生完整的图像,将其升级,然后将其移回隐空间/Uscale the image in latent space. Alternative is to produce the full image from latent representation, upscale that, and then move it back to latent space.",
 
-    "delta噪声种子/Eta noise seed delta": "如果值不为0,它会被添加到'图像生成种子/seed'中,并且再使用带有Eta的采样工具时初始化噪声的RNG。你可以用它生成更多不一样的图像,或者你可以使用它来匹配其他软件的图像。/If this values is non-zero, it will be added to seed and used to initialize RNG for noises when using samplers with Eta. You can use this to produce even more variation of images, or you can use this to match images of other software if you know what you are doing.",
+    "Eta噪声种子/Eta noise seed delta": "如果值不为0,它会被添加到'图像生成种子/seed'中,并且再使用带有Eta的采样工具时初始化噪声的RNG。你可以用它生成更多不一样的图像,或者你可以使用它来匹配其他软件的图像。/If this values is non-zero, it will be added to seed and used to initialize RNG for noises when using samplers with Eta. You can use this to produce even more variation of images, or you can use this to match images of other software if you know what you are doing.",
     "不在图像中添加水印/Do not add watermark to images": "如果启用此选项,将不会把水印添加到创建的图像中。警告:如果不添加水印，你的行为可能是不道德的/If this option is enabled, watermark will not be added to created images. Warning: if you do not add watermark, you may be bevaing in an unethical manner.",
 }
 
