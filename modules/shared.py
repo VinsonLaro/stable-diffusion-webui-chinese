@@ -228,7 +228,7 @@ options_templates.update(options_section(('sd', "Stable Diffusion"), {
     "use_old_emphasis_implementation": OptionInfo(False, "使用旧的强调实现,可以用来繁殖老种子/Use old emphasis implementation. Can be useful to reproduce old seeds."),
     "enable_batch_seeds": OptionInfo(True, "使用K-diffusion采样器批量生成与生成单个图像时相同的图像/Make K-diffusion samplers produce same images in a batch as when making a single image"),
     "filter_nsfw": OptionInfo(False, "过滤NSFW(不适合在公共场合或者上班的时候浏览)内容/Filter NSFW content"),
-    'CLIP_ignore_last_layers': OptionInfo(0, "在CLIP模型的最后几层停止/Stop At last layers of CLIP model", gr.Slider, {"minimum": 0, "maximum": 5, "step": 1}),
+    'CLIP_stop_at_last_layers': OptionInfo(0, "在CLIP模型的最后几层停止/Stop At last layers of CLIP model", gr.Slider, {"minimum": 0, "maximum": 5, "step": 1}),
     "random_artist_categories": OptionInfo([], "当使用随机关键词按钮时,允许选择随机艺术家类别/Allowed categories for random artists selection when using the Roll button", gr.CheckboxGroup, {"choices": artist_db.categories()}),
 }))
 
@@ -245,7 +245,7 @@ options_templates.update(options_section(('ui', "用户界面/User interface"), 
     "show_progressbar": OptionInfo(True, "显示进度条/Show progressbar"),
     "show_progress_every_n_steps": OptionInfo(0, "每N个采样步数显示图像的创建进度,设置0禁用/Show show image creation progress every N sampling steps. Set 0 to disable.", gr.Slider, {"minimum": 0, "maximum": 32, "step": 1}),
     "return_grid": OptionInfo(True, "在web中显示网格/Show grid in results for web"),
-       "do_not_show_images": OptionInfo(False, "网页不显示任何生成图像的结果/Do not show any images in results for web"),
+    "do_not_show_images": OptionInfo(False, "网页不显示任何生成图像的结果/Do not show any images in results for web"),
     "add_model_hash_to_info": OptionInfo(True, "在生成信息中添加模型哈希/Add model hash to generation information"),
     "add_model_name_to_info": OptionInfo(False, "将模型名称添加到生成信息中/Add model name to generation information"),
     "font": OptionInfo("", "具有文本的图像网格的字体/Font for image grids that have text"),
@@ -255,14 +255,14 @@ options_templates.update(options_section(('ui', "用户界面/User interface"), 
 }))
 
 options_templates.update(options_section(('sampler-params', "采样工具参数/Sampler parameters"), {
-        "hide_samplers": OptionInfo([], "在用户界面中隐藏采样工具(需要重新启动)/Hide samplers in user interface (requires restart)", gr.CheckboxGroup, lambda: {"choices": [x.name for x in sd_samplers.all_samplers]}),
-  "eta_ddim": OptionInfo(0.0, "eta(噪声倍增器)用于DDIM/eta (noise multiplier) for DDIM", gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
-   "eta_ancestral": OptionInfo(1.0, "eta(噪声倍增器)用于原始采样工具/eta (noise multiplier) for ancestral samplers", gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
-  "ddim_discretize": OptionInfo('uniform', "img2img DDIM 离散化/img2img DDIM discretize", gr.Radio, {"choices": ['uniform', 'quad']}),
-  's_churn': OptionInfo(0.0, "sigma混合/sigma churn", gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
-  's_tmin':  OptionInfo(0.0, "sigma时长/sigma tmin",  gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
-  's_noise': OptionInfo(1.0, "sigma噪点/sigma noise", gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
-  'eta_noise_seed_delta': OptionInfo(0, "delta噪声种子/Eta noise seed delta", gr.Number, {"precision": 0}),
+    "hide_samplers": OptionInfo([], "在用户界面中隐藏采样工具(需要重新启动)/Hide samplers in user interface (requires restart)", gr.CheckboxGroup, lambda: {"choices": [x.name for x in sd_samplers.all_samplers]}),
+    "eta_ddim": OptionInfo(0.0, "eta(噪声倍增器)用于DDIM/eta (noise multiplier) for DDIM", gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
+    "eta_ancestral": OptionInfo(1.0, "eta(噪声倍增器)用于原始采样工具/eta (noise multiplier) for ancestral samplers", gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
+    "ddim_discretize": OptionInfo('uniform', "img2img DDIM 离散化/img2img DDIM discretize", gr.Radio, {"choices": ['uniform', 'quad']}),
+    's_churn': OptionInfo(0.0, "sigma混合/sigma churn", gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
+    's_tmin':  OptionInfo(0.0, "sigma时长/sigma tmin",  gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
+    's_noise': OptionInfo(1.0, "sigma噪点/sigma noise", gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.01}),
+    'eta_noise_seed_delta': OptionInfo(0, "delta噪声种子/Eta noise seed delta", gr.Number, {"precision": 0}),
 }))
 
 options_templates.update(options_section(('statement', "Stable Diffusion webui版个人汉化说明-10111300"), {
