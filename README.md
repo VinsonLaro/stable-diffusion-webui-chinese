@@ -1,4 +1,4 @@
-# Stable Diffusion WebUI-Chinese 1014-1400
+# Stable Diffusion WebUI-Chinese 1014-1430
 
 [![](https://img.shields.io/badge/Telegram-B站主页-purple)](https://space.bilibili.com/22970812)
 [![](https://img.shields.io/badge/Telegram-交流群-purple)](https://jq.qq.com/?_wv=1027&k=wEbRm1eU)
