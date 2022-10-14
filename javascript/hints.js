@@ -14,7 +14,7 @@ titles = {
     "\u{1f3b2}\ufe0f": "将图像生成种子设置为-1,这样每次生成图像都会用一个新的随机数/Set seed to -1, which will cause a new random number to be used every time",
     "\u267b\ufe0f": "重复使用上一个图像生成种子,通常在它是随机的情况下是有用的/Reuse seed from last generation, mostly useful if it was randomed",
     "\u{1f3a8}": "随机将一个艺术家添加到关键词语句中/Add a random artist to the prompt.",
-    "\u2199\ufe0f": "从用户界面将关键词语句中读取生成参数/Read generation parameters from prompt into user interface.",
+    "\u2199\ufe0f": "如果用户界面关键词语句为空.,则从关键词语或上一次中读取生成参数到用户界面/Read generation parameters from prompt or last generation if prompt is empty into user interface.",
     "\u{1f4c2}": "打开图像输出目录/Open images output directory",
 
     "修复图像的一部分/Inpaint a part of image": "在图像上画一个蒙版,脚本会根据关键词在蒙版遮罩的区域重新生成内容/Draw a mask over an image, and the script will regenerate the masked area with content according to prompt",
@@ -52,7 +52,7 @@ titles = {
 
     "无缝拼接/Tiling": "生成可以平铺的图像/Produce an image that can be tiled.",
     "贴图重叠范围/Tile overlap": "来自SD高级版, 贴图中间应该有多少像素重叠。因为是切片重叠,所以当它们合并回一张图像时,没有清晰可见的接缝/For SD upscale, how much overlap in pixels should there be between tiles. Tiles overlap so that when they are merged back into one picture, there is no clearly visible seam.",
-
+    
     "种子变异/Variation seed": "将不同的图像的图像生成种子混合到这一代/Seed of a different picture to be mixed into the generation.",
     "变异强度/Variation strength": "产生变异的程度。在0时,没有影响。在1时,你会得到变异种子的完成图像(除了遗传采样器,你只会得到一些东西)/How strong of a variation to produce. At 0, there will be no effect. At 1, you will get the complete picture with variation seed (except for ancestral samplers, where you will just get something).",
     "从高度上调整种子大小/Resize seed from height": "在指定分辨率下,尝试生成与相同种子生成图像相似的图像/Make an attempt to produce a picture similar to what would have been produced with same seed at specified resolution",
@@ -63,7 +63,7 @@ titles = {
     "图像命名方式/Images filename pattern": "使用以下标签来定义如何选择图像的文件名:[steps], [cfg], [prompt],  [prompt_no_styles], [prompt_spaces], [width], [height], [styles], [sampler], [seed], [model_hash], [prompt_words], [date], [datetime], [job_timestamp];默认为空/Use following tags to define how filenames for images are chosen: [steps], [cfg], [prompt], [prompt_no_styles], [prompt_spaces], [width], [height], [styles], [sampler], [seed], [model_hash], [prompt_words], [date], [datetime], [job_timestamp]; leave empty for default.",
     "目录命名方式/Directory name pattern": "使用以下标签来定义如何选择图像和网格的子目录:: [steps], [cfg], [prompt], [prompt_no_styles], [prompt_spaces], [width], [height], [styles], [sampler], [seed], [model_hash], [prompt_words], [date], [datetime], [job_timestamp];默认为空/Use following tags to define how subdirectories for images and grids are chosen: [steps], [cfg], [prompt],  [prompt_no_styles], [prompt_spaces], [width], [height], [styles], [sampler], [seed], [model_hash], [prompt_words], [date], [datetime], [job_timestamp]; leave empty for default.",
     "最大关键词数量/Max prompt words": "在[关键词数量/prompt_words]选项中设置要使用的最大关键词数量;请注意:如果关键词语句太长,可能会超过系统可以处理文件路径的最大长度/Set the maximum number of words to be used in the [prompt_words] option; ATTENTION: If the words are too long, they may exceed the maximum length of the file path that the system can handle",
-
+    
     "图像迭代/Loopback": "处理图像,将其作为输入对象,然后重复/Process an image, use it as an input, repeat.",
     "图像迭代次数/Loops": "需要重复处理一张图像,并将其作为下一个迭代的输入对象多少次/How many times to repeat processing an image and using it as input for the next iteration",
 
@@ -72,7 +72,7 @@ titles = {
     "应用预设/Apply style": "将选择的预设插入到提示字段中/Insert selected styles into prompt fields",
     "创建预设/Create style": "将当前关键词提取到预设中,如果将标记关键词语句添加到文本中,关键词将在将来使用该关键词时,将其用作关键词语句的占位符/Save current prompts as a style. If you add the token {prompt} to the text, the style use that as placeholder for your prompt when you use the style in the future.",
 
-    "模型名称/Checkpoint name": "在生成图像之前,从模型加载权重。你可以使用哈希或者文件名的一部分(如设置所示)作为模型的名称。建议与Y轴一起使用来减少切换/Loads weights from checkpoint before making images. You can either use hash or a part of filename (as seen in settings) for checkpoint name. Recommended to use with Y axis for less switching.",
+    "模型名称/Checkpoint name": "在生成图像之前从模型加载权重。您可以使用hash值或部分文件名(见设置)作为模型名称。建议配合Y轴使用减少切换/Loads weights from checkpoint before making images. You can either use hash or a part of filename (as seen in settings) for checkpoint name. Recommended to use with Y axis for less switching.",
 
     "显存/vram": "Torch激活:在生成期间使用的VRAM(显存)的峰值量,不包括缓存的数据。\nTorch保留:Torch分配的VRAM的峰值量,包括所有活动和缓存的数据。\nSys VRAM:所有应用程序的VRAM分配峰值量/总数GPU VRAM(峰值利用率%)/Torch active: Peak amount of VRAM used by Torch during generation, excluding cached data.\nTorch reserved: Peak amount of VRAM allocated by Torch, including all active and cached data.\nSys VRAM: Peak amount of VRAM allocation across all applications / total GPU VRAM (peak utilization%).",
 
@@ -80,7 +80,15 @@ titles = {
     "隐空间强度/Scale latent": "在隐空间中对图像进行缩放。另一种方法是从潜在的表象中产生完整的图像,将其升级,然后将其移回隐空间/Uscale the image in latent space. Alternative is to produce the full image from latent representation, upscale that, and then move it back to latent space.",
 
     "Eta噪声种子/Eta noise seed delta": "如果值不为0,它会被添加到'图像生成种子/seed'中,并且再使用带有Eta的采样工具时初始化噪声的RNG。你可以用它生成更多不一样的图像,或者你可以使用它来匹配其他软件的图像。/If this values is non-zero, it will be added to seed and used to initialize RNG for noises when using samplers with Eta. You can use this to produce even more variation of images, or you can use this to match images of other software if you know what you are doing.",
-    "不在图像中添加水印/Do not add watermark to images": "如果启用此选项,将不会把水印添加到创建的图像中。警告:如果不添加水印，你的行为可能是不道德的/If this option is enabled, watermark will not be added to created images. Warning: if you do not add watermark, you may be bevaing in an unethical manner.",
+    "不在图像中添加水印/Do not add watermark to images": "如果启用此选项,将不会把水印添加到创建的图像中。警告:如果不添加水印.,你的行为可能是不道德的/If this option is enabled, watermark will not be added to created images. Warning: if you do not add watermark, you may be being in an unethical manner.",
+
+    "正则文件名/Filename word regex": "该正则表达式将从文件名中提取关键词.,并使用下面的选项将它们连接到用于训练的标签文本中。留空以保持文件名文本原样/This regular expression will be used extract words from filename, and they will be joined using the option below into label text used for training. Leave empty to keep filename text as it is.",
+    "文件名连接符号/Filename join string": "如果启用了上面的选项.,则此字符将用于将拆分的单词连接成一行/This string will be used to join split words into a single line if the option above is enabled.",
+
+    "快速设置列表/Quicksettings list": "设置列表名称.,以逗号分隔.,用于设置应该进入顶部的快速访问栏.,而不是通常的设置选项。参见modules/shared.py设置名称。需要重新启动才能应用/List of setting names, separated by commas, for settings that should go to the quick access bar at the top, rather than the usual setting tab. See modules/shared.py for setting names. Requires restarting to apply.",
+
+    "加权和/Weighted Sum": "结果=A * (1 - M) + B * M/Result = A * (1 - M) + B * M",
+    "添加不同/Add difference": "结果=A + (B - C) * (1 - M)/Result = A + (B - C) * (1 - M)",
 }
 
 
