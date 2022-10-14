@@ -120,45 +120,17 @@ class Script(scripts.Script):
         return is_img2img
 
     def ui(self, is_img2img):
-        info = gr.Markdown('''
-        * `CFG Scale` should be 2 or lower.
-        ''')
-        
-        override_sampler = gr.Checkbox(label="重写'采样方法'到Euler?(这个方法就是为此而构建的)/Override `Sampling method` to Euler?(this method is built for it)", value=True)
-        
-        override_prompt = gr.Checkbox(label="重写'关键词语句'到与'原始关键词语句'相同的值?(和负面的关键词语句)/Override `prompt` to the same value as `original prompt`?(and `negative prompt`)", value=True)
-        original_prompt = gr.Textbox(label="原始关键词/Original prompt", lines=1)
-        original_negative_prompt = gr.Textbox(label="Original negative prompt", lines=1)
-
-        override_steps = gr.Checkbox(label="重写'采样步数'到相同的值'解码步骤'?/Override `Sampling Steps` to the same value as `Decode steps`?", value=True)
+        original_prompt = gr.Textbox(label="关键词语句原文/Original prompt", lines=1)
+        original_negative_prompt = gr.Textbox(label="否定关键词语句原文/Original negative prompt", lines=1)
+        cfg = gr.Slider(label="CFG解码指数/Decode CFG scale", minimum=0.0, maximum=15.0, step=0.1, value=1.0)
         st = gr.Slider(label="解码步数/Decode steps", minimum=1, maximum=150, step=1, value=50)
-
-        override_strength = gr.Checkbox(label="Override `Denoising strength` to 1?", value=True)
-
-        cfg = gr.Slider(label="Decode CFG scale", minimum=0.0, maximum=15.0, step=0.1, value=1.0)
         randomness = gr.Slider(label="随机性/Randomness", minimum=0.0, maximum=1.0, step=0.01, value=0.0)
         sigma_adjustment = gr.Checkbox(label="Sigma调整图像噪点/Sigma adjustment for finding noise for image", value=False)
+        return [original_prompt, original_negative_prompt, cfg, st, randomness, sigma_adjustment]
 
-        return [
-            info, 
-            override_sampler,
-            override_prompt, original_prompt, original_negative_prompt, 
-            override_steps, st,
-            override_strength,
-            cfg, randomness, sigma_adjustment,
-        ]
-
-    def run(self, p, _, override_sampler, override_prompt, original_prompt, original_negative_prompt, override_steps, st, override_strength, cfg, randomness, sigma_adjustment):
-        # Override
-        if override_sampler:
-            p.sampler_index = [sampler.name for sampler in sd_samplers.samplers].index("Euler")
-        if override_prompt:
-            p.prompt = original_prompt
-            p.negative_prompt = original_negative_prompt
-        if override_steps:
-            p.steps = st
-        if override_strength:
-            p.denoising_strength = 1.0
+    def run(self, p, original_prompt, original_negative_prompt, cfg, st, randomness, sigma_adjustment):
+        p.batch_size = 1
+        p.batch_count = 1
 
 
         def sample_extra(conditioning, unconditional_conditioning, seeds, subseeds, subseed_strength):
@@ -182,7 +154,7 @@ class Script(scripts.Script):
                     rec_noise = find_noise_for_image(p, cond, uncond, cfg, st)
                 self.cache = Cached(rec_noise, cfg, st, lat, original_prompt, original_negative_prompt, sigma_adjustment)
 
-            rand_noise = processing.create_random_tensors(p.init_latent.shape[1:], seeds=seeds, subseeds=subseeds, subseed_strength=p.subseed_strength, seed_resize_from_h=p.seed_resize_from_h, seed_resize_from_w=p.seed_resize_from_w, p=p)
+            rand_noise = processing.create_random_tensors(p.init_latent.shape[1:], [p.seed + x + 1 for x in range(p.init_latent.shape[0])])
             
             combined_noise = ((1 - randomness) * rec_noise + randomness * rand_noise) / ((randomness**2 + (1-randomness)**2) ** 0.5)
             

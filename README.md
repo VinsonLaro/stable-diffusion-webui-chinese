@@ -1,4 +1,4 @@
-# Stable Diffusion WebUI-Chinese 1014-1430
+# Stable Diffusion WebUI-Chinese 1014-1400
 
 [![](https://img.shields.io/badge/Telegram-B站主页-purple)](https://space.bilibili.com/22970812)
 [![](https://img.shields.io/badge/Telegram-交流群-purple)](https://jq.qq.com/?_wv=1027&k=wEbRm1eU)
@@ -7,7 +7,7 @@
 
 此版本为[Stable Diffusion Web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)原版汉化页面。
 
-当前版本为1014-1430，即基于官方webui 10月12日14点30分之前的最新版本进行的汉化。
+当前版本为1014-1400，即基于官方webui 10月14日14点之前的最新版本进行的汉化。
 
 ⚠️汉化免费，请注意欺诈！
 

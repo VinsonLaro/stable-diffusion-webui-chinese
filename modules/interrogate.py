@@ -123,7 +123,7 @@ class InterrogateModels:
 
         return caption[0]
 
-    def interrogate(self, pil_image, include_ranks=False):
+    def interrogate(self, pil_image):
         res = None
 
         try:
@@ -156,10 +156,7 @@ class InterrogateModels:
                 for name, topn, items in self.categories:
                     matches = self.rank(image_features, items, top_count=topn)
                     for match, score in matches:
-                        if include_ranks:
-                            res += ", " + match
-                        else:
-                            res += f", ({match}:{score})"
+                        res += ", " + match
 
         except Exception:
             print(f"Error interrogating", file=sys.stderr)

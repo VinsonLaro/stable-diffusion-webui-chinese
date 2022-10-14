@@ -13,7 +13,7 @@ import modules.memmon
 import modules.sd_models
 import modules.styles
 import modules.devices as devices
-from modules import sd_samplers, sd_models
+from modules import sd_samplers
 from modules.hypernetworks import hypernetwork
 from modules.paths import models_path, script_path, sd_path
 
@@ -145,14 +145,14 @@ def realesrgan_models_names():
 
 
 class OptionInfo:
-    def __init__(self, default=None, label="", component=None, component_args=None, onchange=None, show_on_main_page=False, refresh=None):
+    def __init__(self, default=None, label="", component=None, component_args=None, onchange=None, show_on_main_page=False):
         self.default = default
         self.label = label
         self.component = component
         self.component_args = component_args
         self.onchange = onchange
         self.section = None
-        self.refresh = refresh
+        self.show_on_main_page = show_on_main_page
 
 
 def options_section(section_identifier, options_dict):
@@ -226,20 +226,16 @@ options_templates.update(options_section(('face-restoration', "面部修复/Face
 options_templates.update(options_section(('system', "系统System"), {
     "memmon_poll_rate": OptionInfo(8, "显存在生成过程中每秒询问一次,设置为0表示禁用/VRAM usage polls per second during generation. Set to 0 to disable.", gr.Slider, {"minimum": 0, "maximum": 40, "step": 1}),
     "samples_log_stdout": OptionInfo(False, "总是打印出同一批次信息到标准输出/Always print all generation info to standard output"),
-    "multiple_tqdm": OptionInfo(True, "向控制台添加第二个进度条,显示整个作业的进度/Add a second progress bar to the console that shows progress for an entire job."),
+    "multiple_tqdm": OptionInfo(True, "向控制台添加第二个进度条,显示整个作业的进度,不可用于PyCharm控制台/Add a second progress bar to the console that shows progress for an entire job. Broken in PyCharm console."),
 }))
 
 options_templates.update(options_section(('training', "训练/Training"), {
     "unload_models_when_training": OptionInfo(False, "训练时从显存中清除VAE和CLIP/Unload VAE and CLIP from VRAM when training"),
-    "dataset_filename_word_regex": OptionInfo("", "正则文件名/Filename word regex"),
-    "dataset_filename_join_string": OptionInfo(" ", "文件名连接符号/Filename join string"),
-    "training_image_repeats_per_epoch": OptionInfo(100, "每一代训练的单个输入图像的重复次数;仅用于显示训练代数/Number of repeats for a single input image per epoch; used only for displaying epoch number", gr.Number, {"precision": 0}),
 }))
 
 options_templates.update(options_section(('sd', "Stable Diffusion"), {
     "sd_model_checkpoint": OptionInfo(None, "Stable Diffusion模型/Stable Diffusion checkpoint", gr.Dropdown, lambda: {"choices": modules.sd_models.checkpoint_tiles()}, show_on_main_page=True),
     "sd_hypernetwork": OptionInfo("None", "Stable Diffusion微调超网络/Stable Diffusion finetune hypernetwork", gr.Dropdown, lambda: {"choices": ["None"] + [x for x in hypernetworks.keys()]}),
-    "sd_hypernetwork_strength": OptionInfo(1.0, "超网络强度/Hypernetwork strength", gr.Slider, {"minimum": 0.0, "maximum": 1.0, "step": 0.001}),
     "img2img_color_correction": OptionInfo(False, "对img2img生成的结果应用颜色校正来与原始颜色相匹配/Apply color correction to img2img results to match original colors."),
     "save_images_before_color_correction": OptionInfo(False, "在对img2img生成的结果应用颜色校正之前,保存图像的副本/Save a copy of image before applying color correction to img2img results"),    
     "img2img_fix_steps": OptionInfo(False, "使用img2img,完全执行滑块指定的步数(通常情况下,降噪越少,执行的步数就越少)/With img2img, do exactly the amount of steps the slider specifies (normally you'd do less with less denoising)."),
@@ -251,21 +247,16 @@ options_templates.update(options_section(('sd', "Stable Diffusion"), {
     "filter_nsfw": OptionInfo(False, "过滤NSFW(不适合在公共场合或者上班的时候浏览)内容/Filter NSFW content"),
     'CLIP_stop_at_last_layers': OptionInfo(0, "在CLIP模型的最后几层停止/Stop At last layers of CLIP model", gr.Slider, {"minimum": 0, "maximum": 5, "step": 1}),
     "random_artist_categories": OptionInfo([], "当使用随机关键词按钮时,允许选择随机艺术家类别/Allowed categories for random artists selection when using the Roll button", gr.CheckboxGroup, {"choices": artist_db.categories()}),
-    'quicksettings': OptionInfo("sd_model_checkpoint", "Quicksettings list"),
 }))
 
 options_templates.update(options_section(('interrogate', "询问设置/Interrogate Options"), {
     "interrogate_keep_models_in_memory": OptionInfo(False, "询问:将模型保存在显存中/Interrogate: keep models in VRAM"),
     "interrogate_use_builtin_artists": OptionInfo(True, "询问:使用artsts.csv中的艺术家/Interrogate: use artists from artists.csv"),
-    "interrogate_return_ranks": OptionInfo(False, "询问:在结果中包含模型标签匹配的排名(对基于标题的询问器没有影响)/Interrogate: include ranks of model tags matches in results (Has no effect on caption-based interrogators)."),
     "interrogate_clip_num_beams": OptionInfo(1, "询问:集数数量来自BLIP/Interrogate: num_beams for BLIP", gr.Slider, {"minimum": 1, "maximum": 16, "step": 1}),
     "interrogate_clip_min_length": OptionInfo(24, "询问:最小描述长度(不包括艺术家等)/Interrogate: minimum description length (excluding artists, etc..)", gr.Slider, {"minimum": 1, "maximum": 128, "step": 1}),
     "interrogate_clip_max_length": OptionInfo(48, "询问:最大描述长度/Interrogate: maximum description length", gr.Slider, {"minimum": 1, "maximum": 256, "step": 1}),
-    "interrogate_clip_dict_limit": OptionInfo(1500, "CLIP:文本文件中的最大行数(0 =无限制)/CLIP: maximum number of lines in text file (0 = No limit)"),
     "interrogate_deepbooru_score_threshold": OptionInfo(0.5, "询问:deepbooru置信度分数阈值/Interrogate: deepbooru score threshold", gr.Slider, {"minimum": 0, "maximum": 1, "step": 0.01}),
     "deepbooru_sort_alpha": OptionInfo(True, "询问:deepbooru分类整理/Interrogate: deepbooru sort alphabetically"),
-    "deepbooru_use_spaces": OptionInfo(False, "在deepbooru中为标签使用空格/use spaces for tags in deepbooru"),
-    "deepbooru_escape": OptionInfo(True, "deepbooru中的转义(\\)方括号(因此它们被用作文字方括号而不是用于强调)/escape (\\) brackets in deepbooru (so they are used as literal brackets and not for emphasis)"),
     }))
 
 options_templates.update(options_section(('ui', "用户界面/User interface"), {
@@ -355,8 +346,6 @@ class Options:
     def onchange(self, key, func):
         item = self.data_labels.get(key)
         item.onchange = func
-
-        func()
 
     def dumpjson(self):
         d = {k: self.data.get(k, self.data_labels.get(k).default) for k in self.data_labels.keys()}

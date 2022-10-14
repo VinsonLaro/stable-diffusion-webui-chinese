@@ -77,46 +77,14 @@ def apply_sampler(p, x, xs):
     p.sampler_index = sampler_index
 
 
-def confirm_samplers(p, xs):
-    samplers_dict = build_samplers_dict(p)
-    for x in xs:
-        if x.lower() not in samplers_dict.keys():
-            raise RuntimeError(f"Unknown sampler: {x}")
-
-
 def apply_checkpoint(p, x, xs):
     info = modules.sd_models.get_closet_checkpoint_match(x)
-    if info is None:
-        raise RuntimeError(f"Unknown checkpoint: {x}")
+    assert info is not None, f'Checkpoint for {x} not found'
     modules.sd_models.reload_model_weights(shared.sd_model, info)
 
 
-def confirm_checkpoints(p, xs):
-    for x in xs:
-        if modules.sd_models.get_closet_checkpoint_match(x) is None:
-            raise RuntimeError(f"Unknown checkpoint: {x}")
-
-
 def apply_hypernetwork(p, x, xs):
-    if x.lower() in ["", "none"]:
-        name = None
-    else:
-        name = hypernetwork.find_closest_hypernetwork_name(x)
-        if not name:
-            raise RuntimeError(f"Unknown hypernetwork: {x}")
-    hypernetwork.load_hypernetwork(name)
-
-
-def apply_hypernetwork_strength(p, x, xs):
-    hypernetwork.apply_strength(x)
-
-
-def confirm_hypernetworks(p, xs):
-    for x in xs:
-        if x.lower() in ["", "none"]:
-            continue
-        if not hypernetwork.find_closest_hypernetwork_name(x):
-            raise RuntimeError(f"Unknown hypernetwork: {x}")
+    hypernetwork.load_hypernetwork(x)
 
 
 def apply_clip_skip(p, x, xs):
@@ -153,44 +121,39 @@ def str_permutations(x):
     return x
 
 
-AxisOption = namedtuple("AxisOption", ["label", "type", "apply", "format_value", "confirm"])
-AxisOptionImg2Img = namedtuple("AxisOptionImg2Img", ["label", "type", "apply", "format_value", "confirm"])
+AxisOption = namedtuple("AxisOption", ["label", "type", "apply", "format_value"])
+AxisOptionImg2Img = namedtuple("AxisOptionImg2Img", ["label", "type", "apply", "format_value"])
 
 
 axis_options = [
-    AxisOption("无/Nothing", str, do_nothing, format_nothing, None),
-    AxisOption("Seed", int, apply_field("seed"), format_value_add_label, None),
-    AxisOption("Var. seed", int, apply_field("subseed"), format_value_add_label, None),
-    AxisOption("Var. strength", float, apply_field("subseed_strength"), format_value_add_label, None),
-    AxisOption("Steps", int, apply_field("steps"), format_value_add_label, None),
-    AxisOption("CFG Scale", float, apply_field("cfg_scale"), format_value_add_label, None),
-    AxisOption("Prompt S/R", str, apply_prompt, format_value, None),
-    AxisOption("Prompt order", str_permutations, apply_order, format_value_join_list, None),
-    AxisOption("Sampler", str, apply_sampler, format_value, confirm_samplers),
-    AxisOption("Checkpoint name", str, apply_checkpoint, format_value, confirm_checkpoints),
-    AxisOption("Hypernetwork", str, apply_hypernetwork, format_value, confirm_hypernetworks),
-    AxisOption("Hypernet str.", float, apply_hypernetwork_strength, format_value_add_label, None),
-    AxisOption("Sigma Churn", float, apply_field("s_churn"), format_value_add_label, None),
-    AxisOption("Sigma min", float, apply_field("s_tmin"), format_value_add_label, None),
-    AxisOption("Sigma max", float, apply_field("s_tmax"), format_value_add_label, None),
-    AxisOption("Sigma noise", float, apply_field("s_noise"), format_value_add_label, None),
-    AxisOption("Eta", float, apply_field("eta"), format_value_add_label, None),
-    AxisOption("Clip skip", int, apply_clip_skip, format_value_add_label, None),
-    AxisOptionImg2Img("Denoising", float, apply_field("denoising_strength"), format_value_add_label, None),  # as it is now all AxisOptionImg2Img items must go after AxisOption ones
+    AxisOption("无/Nothing", str, do_nothing, format_nothing),
+    AxisOption("图像生成种子/Seed", int, apply_field("seed"), format_value_add_label),
+    AxisOption("图像生成种子临时变量/Var. seed", int, apply_field("subseed"), format_value_add_label),
+    AxisOption("强度临时变量/Var. strength", float, apply_field("subseed_strength"), format_value_add_label),
+    AxisOption("步数/Steps", int, apply_field("steps"), format_value_add_label),
+    AxisOption("CFG指数/CFG Scale", float, apply_field("cfg_scale"), format_value_add_label),
+    AxisOption("关键词S/R/Prompt S/R", str, apply_prompt, format_value),
+    AxisOption("关键词列表/Prompt order", str_permutations, apply_order, format_value_join_list),
+    AxisOption("采样器/Sampler", str, apply_sampler, format_value),
+    AxisOption("模型名称/Checkpoint name", str, apply_checkpoint, format_value),
+        AxisOption("超网络/Hypernetwork", str, apply_hypernetwork, format_value),
+    AxisOption("Sigma混合/Sigma Churn", float, apply_field("s_churn"),  format_value_add_label),
+    AxisOption("Sigma最小/Sigma min", float, apply_field("s_tmin"),   format_value_add_label),
+    AxisOption("Sigma最大/Sigma max", float, apply_field("s_tmax"),   format_value_add_label),
+    AxisOption("Sigma噪点/Sigma noise", float, apply_field("s_noise"),  format_value_add_label),
+    AxisOption("Eta", float, apply_field("eta"), format_value_add_label),
+    AxisOption("Clip跳过/Clip skip", int, apply_clip_skip, format_value_add_label),
+    AxisOptionImg2Img("去噪/Denoising", float, apply_field("denoising_strength"), format_value_add_label),  # as it is now all AxisOptionImg2Img items must go after AxisOption ones
 ]
 
 
-def draw_xy_grid(p, xs, ys, x_labels, y_labels, cell, draw_legend, include_lone_images):
+def draw_xy_grid(p, xs, ys, x_labels, y_labels, cell, draw_legend):
+    res = []
+
     ver_texts = [[images.GridAnnotation(y)] for y in y_labels]
     hor_texts = [[images.GridAnnotation(x)] for x in x_labels]
 
-    # Temporary list of all the images that are generated to be populated into the grid.
-    # Will be filled with empty images for any individual step that fails to process properly
-    image_cache = []
-
-    processed_result = None
-    cell_mode = "P"
-    cell_size = (1,1)
+    first_processed = None
 
     state.job_count = len(xs) * len(ys) * p.n_iter
 
@@ -198,39 +161,22 @@ def draw_xy_grid(p, xs, ys, x_labels, y_labels, cell, draw_legend, include_lone_
         for ix, x in enumerate(xs):
             state.job = f"{ix + iy * len(xs) + 1} out of {len(xs) * len(ys)}"
 
-            processed:Processed = cell(x, y)
+            processed = cell(x, y)
+            if first_processed is None:
+                first_processed = processed
+
             try:
-                # this dereference will throw an exception if the image was not processed
-                # (this happens in cases such as if the user stops the process from the UI)
-                processed_image = processed.images[0]
-                
-                if processed_result is None:
-                    # Use our first valid processed result as a template container to hold our full results
-                    processed_result = copy(processed)
-                    cell_mode = processed_image.mode
-                    cell_size = processed_image.size
-                    processed_result.images = [Image.new(cell_mode, cell_size)]
-
-                image_cache.append(processed_image)
-                if include_lone_images:
-                    processed_result.images.append(processed_image)
-                    processed_result.all_prompts.append(processed.prompt)
-                    processed_result.all_seeds.append(processed.seed)
-                    processed_result.infotexts.append(processed.infotexts[0])
+              res.append(processed.images[0])
             except:
-                image_cache.append(Image.new(cell_mode, cell_size))
+              res.append(Image.new(res[0].mode, res[0].size))
 
-    if not processed_result:
-        print("Unexpected error: draw_xy_grid failed to return even a single processed image")
-        return Processed()
-
-    grid = images.image_grid(image_cache, rows=len(ys))
+    grid = images.image_grid(res, rows=len(ys))
     if draw_legend:
-        grid = images.draw_grid_annotations(grid, cell_size[0], cell_size[1], hor_texts, ver_texts)
+        grid = images.draw_grid_annotations(grid, res[0].width, res[0].height, hor_texts, ver_texts)
 
-    processed_result.images[0] = grid
+    first_processed.images = [grid]
 
-    return processed_result
+    return first_processed
 
 
 re_range = re.compile(r"\s*([+-]?\s*\d+)\s*-\s*([+-]?\s*\d+)(?:\s*\(([+-]\d+)\s*\))?\s*")
@@ -255,12 +201,11 @@ class Script(scripts.Script):
             y_values = gr.Textbox(label="Y值/Y values", visible=False, lines=1)
         
         draw_legend = gr.Checkbox(label='绘制网格/Draw legend', value=True)
-        include_lone_images = gr.Checkbox(label='包括单独的图片/Include Separate Images', value=False)
         no_fixed_seeds = gr.Checkbox(label='保持图像生成种子值为-1/Keep -1 for seeds', value=False)
             
-        return [x_type, x_values, y_type, y_values, draw_legend, include_lone_images, no_fixed_seeds]
+        return [x_type, x_values, y_type, y_values, draw_legend, no_fixed_seeds]
 
-    def run(self, p, x_type, x_values, y_type, y_values, draw_legend, include_lone_images, no_fixed_seeds):
+    def run(self, p, x_type, x_values, y_type, y_values, draw_legend, no_fixed_seeds):
         if not no_fixed_seeds:
             modules.processing.fix_seed(p)
 
@@ -326,8 +271,15 @@ class Script(scripts.Script):
             valslist = [opt.type(x) for x in valslist]
             
             # Confirm options are valid before starting
-            if opt.confirm:
-                opt.confirm(p, valslist)
+            if opt.label == "Sampler":
+                samplers_dict = build_samplers_dict(p)
+                for sampler_val in valslist:
+                    if sampler_val.lower() not in samplers_dict.keys():
+                        raise RuntimeError(f"Unknown sampler: {sampler_val}")
+            elif opt.label == "Checkpoint name":
+                for ckpt_val in valslist:
+                    if modules.sd_models.get_closet_checkpoint_match(ckpt_val) is None:
+                        raise RuntimeError(f"Checkpoint for {ckpt_val} not found")
 
             return valslist
 
@@ -371,8 +323,7 @@ class Script(scripts.Script):
             x_labels=[x_opt.format_value(p, x_opt, x) for x in xs],
             y_labels=[y_opt.format_value(p, y_opt, y) for y in ys],
             cell=cell,
-            draw_legend=draw_legend,
-            include_lone_images=include_lone_images
+            draw_legend=draw_legend
         )
 
         if opts.grid_save:
@@ -382,8 +333,6 @@ class Script(scripts.Script):
         modules.sd_models.reload_model_weights(shared.sd_model)
 
         hypernetwork.load_hypernetwork(opts.sd_hypernetwork)
-        hypernetwork.apply_strength()
-
 
         opts.data["CLIP_stop_at_last_layers"] = CLIP_stop_at_last_layers
 
