@@ -20,7 +20,7 @@
 
 1.更新到最新版本的stable diffusion webui！！
 
-2.把解压的文件放到stable-diffusion-webui\localizations目录下
+2.把Chinese-English.json和Chinese-All.json文件放到stable-diffusion-webui\localizations目录下
 
 3.打开stable diffusion webui
 
