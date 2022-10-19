@@ -23,7 +23,7 @@
 
 3.打开stable diffusion webui
 
-4.进到设置Setting
+4.然后进到设置Setting
 
 5.找到User interface，下面有一个Localization (requires restart)
 
@@ -50,7 +50,7 @@ Restart Gradio and Refresh components (Custom Scripts, ui.py, js and css only)
 
 3.打开stable diffusion webui
 
-4.进到设置Setting
+4.然后进到设置Setting
 
 5.找到User interface，下面有一个Localization (requires restart)
 
