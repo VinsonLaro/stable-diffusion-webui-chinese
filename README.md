@@ -15,8 +15,34 @@
 
 ⚠️汉化免费，请注意欺诈！
 
+### 在SD WebUI的localizations目录安装
 
-### 电脑已安装Stable Diffusion WebUI，安装并切换到汉化版
+1.更新到最新版本的stable diffusion webui！！
+
+2.在localizations目录下使用`git clone https://github.com/VinsonLaro/stable-diffusion-webui-chinese`
+
+3.打开stable diffusion webui
+
+4.进到设置Setting
+
+5.找到User interface，下面有一个Localization (requires restart)
+
+6.把选项切换到Chinese-English
+
+7.然后划到最上面，点几下Apply setting
+
+8.再划到最下面，点击
+
+Restart Gradio and Refresh components (Custom Scripts, ui.py, js and css only)
+
+9.这时候界面会重新加载，重新加载完了以后就汉化好了
+
+### 后继汉化更新
+
+1.在localizations目录下使用`git pull`
+
+
+### 手动安装汉化
 
 1.更新到最新版本的stable diffusion webui！！
 
