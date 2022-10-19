@@ -19,7 +19,7 @@
 
 1.更新到最新版本的stable diffusion webui！！
 
-2.在localizations目录下使用`git clone https://github.com/VinsonLaro/stable-diffusion-webui-chinese`
+2.在stable diffusion webui目录下使用`git clone https://github.com/VinsonLaro/stable-diffusion-webui-chinese localizations`
 
 3.打开stable diffusion webui
 
