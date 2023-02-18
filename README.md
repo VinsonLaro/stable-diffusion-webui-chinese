@@ -9,6 +9,6 @@
 
 当前版本为0219，即基于官方webui本地化模板2月19日之前的最新版本进行的汉化。
 
-## 包含一下扩展翻译
+## 包含以下扩展翻译
 
 [ControlNet](https://github.com/Mikubill/sd-webui-controlnet)
