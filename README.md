@@ -19,7 +19,7 @@
 
 ### 方法1：通过WebUI拓展进行安装
 
-1.打开stable diffusion webui，进入"Extensions"文件夹
+1.打开stable diffusion webui，进入"Extensions"选项卡
 
 2.点击"Install from URL"，注意"URL for extension's git repository"下方的输入框
 
