@@ -99,7 +99,7 @@
     "Resize seed from width": "随机数宽度/Resize seed from width",
     "Resize seed from height": "随机数高度/Resize seed from height",
     "Override settings": "覆盖设置/Override settings",
-    "ControlNet": "控制网络(ControlNet)/ControlNet",
+    "ControlNet": "ControlNet",
     "Image": "图像/Image",
     "Drop Image Here": "拖拽图像至此/Drop Image Here",
     "Enable scribble mode if your image has white background.": "如果图片有白色背景,请启用涂鸦模式/Enable scribble mode if your image has white background.",
