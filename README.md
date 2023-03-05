@@ -13,6 +13,7 @@
 ## 包含以下扩展翻译
 
 [ControlNet](https://github.com/Mikubill/sd-webui-controlnet)
+
 [openpose-editor](https://github.com/fkunn1326/openpose-editor)
 
 ## 安装说明
