@@ -430,7 +430,7 @@
     "Train Hypernetwork": "训练超网络",
     "width": "宽度",
     "height": "高度",
-    "Add": "加载",
+    "Add": "添加骨骼",
     "Reset": "重置",
     "Load from JSON": "加载自JSON文件",
     "Detect from image": "检测图像",
