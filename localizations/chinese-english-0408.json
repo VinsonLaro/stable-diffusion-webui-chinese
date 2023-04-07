@@ -488,7 +488,7 @@
     "Train Hypernetwork": "训练超网络/Train Hypernetwork",
     "width": "宽度/width",
     "height": "高度/height",
-    "Add": "加载/Add",
+    "Add": "添加骨骼/Add",
     "Reset": "重置/Reset",
     "Load from JSON": "加载自JSON文件/Load from JSON",
     "Detect from Image": "从图像中检测/Detect from Image",
