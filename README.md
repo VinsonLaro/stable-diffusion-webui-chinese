@@ -1,4 +1,4 @@
-# Stable Diffusion WebUI Chinese 0306
+# Stable Diffusion WebUI Chinese 0408
 
 [![](https://img.shields.io/badge/汉化-B站主页-purple)](https://space.bilibili.com/22970812)
 [![](https://img.shields.io/badge/汉化-QQ交流群-purple)](https://jq.qq.com/?_wv=1027&k=wEbRm1eU)
@@ -13,8 +13,28 @@
 ## 包含以下扩展翻译
 
 [ControlNet](https://github.com/Mikubill/sd-webui-controlnet)
+版本：241c05f8 (Thu Mar 23 15:18:35 2023)
 
 [openpose-editor](https://github.com/fkunn1326/openpose-editor)
+版本：a63fefc3 (Thu Mar 30 08:11:41 2023)
+
+[multidiffusion-upscaler](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111)
+版本：70ca3c77 (Wed Apr 5 10:57:07 2023)
+
+[dynamic-prompts](https://github.com/adieyal/sd-dynamic-prompts)
+版本：707fa9a1 (Thu Apr 6 18:31:57 2023)
+
+[artists-to-study](https://github.com/camenduru/stable-diffusion-webui-artists-to-study)
+版本：970d388e (Tue Feb 28 20:52:57 2023)
+
+[dataset-tag-editor](https://github.com/toshiaki1729/stable-diffusion-webui-dataset-tag-editor)
+版本：c1c78f59 (Sun Apr 2 11:15:32 2023)
+
+[wd14-tagger](https://github.com/toriato/stable-diffusion-webui-wd14-tagger)
+版本：3ba3a735 (Sat Mar 25 20:32:37 2023)
+
+[ultimate-upscale](https://github.com/Coyote-A/ultimate-upscale-for-automatic1111)
+版本：0a3d03a4 (Tue Feb 7 06:07:23 2023)
 
 ## 安装说明
 
