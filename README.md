@@ -1,6 +1,7 @@
 # Stable Diffusion WebUI Chinese 0512
 
 [![](https://img.shields.io/badge/汉化-B站主页-purple)](https://space.bilibili.com/22970812)
+[![](https://img.shields.io/badge/汉化-视频教程-purple)](https://www.bilibili.com/video/BV1kg4y1H73b)
 [![](https://img.shields.io/badge/汉化-QQ交流群-purple)](https://jq.qq.com/?_wv=1027&k=wEbRm1eU)
 
 ## 解释说明
