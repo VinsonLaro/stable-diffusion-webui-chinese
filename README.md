@@ -7,7 +7,7 @@
 
 此项目为[Stable Diffusion Web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)简体中文扩展
 
-当前版本为0408，即基于官方webui和自用插件的本地化模板，于4月8日之前的最新版本进行的汉化。
+当前版本为0512，即基于官方webui和自用插件的本地化模板，于5月12日之前的最新版本进行的汉化。
 
 本人精力有限不可能每个功能都体验过，然后根据具体功能来翻译，所以有翻译得不对或者更好的翻译请联系我。
 
@@ -16,10 +16,10 @@
 ## 包含以下扩展翻译
 
 [ControlNet](https://github.com/Mikubill/sd-webui-controlnet)
-版本：241c05f8 (Thu Mar 23 15:18:35 2023)
+版本：c9c8ca6e (Sun May 7 17:15:00 2023)
 
 [openpose-editor](https://github.com/fkunn1326/openpose-editor)
-版本：a63fefc3 (Thu Mar 30 08:11:41 2023)
+版本：23f3a144 (Tue May 9 13:29:40 2023)
 
 [multidiffusion-upscaler](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111)
 版本：70ca3c77 (Wed Apr 5 10:57:07 2023)
@@ -31,13 +31,13 @@
 版本：970d388e (Tue Feb 28 20:52:57 2023)
 
 [dataset-tag-editor](https://github.com/toshiaki1729/stable-diffusion-webui-dataset-tag-editor)
-版本：c1c78f59 (Sun Apr 2 11:15:32 2023)
+版本：43b0478f (Tue May 2 13:29:24 2023)
 
 [wd14-tagger](https://github.com/toriato/stable-diffusion-webui-wd14-tagger)
 版本：3ba3a735 (Sat Mar 25 20:32:37 2023)
 
 [ultimate-upscale](https://github.com/Coyote-A/ultimate-upscale-for-automatic1111)
-版本：0a3d03a4 (Tue Feb 7 06:07:23 2023)
+版本：756bb505 (Fri May 5 00:22:21 2023)
 
 ## 安装说明
 
