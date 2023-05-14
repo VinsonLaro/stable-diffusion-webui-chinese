@@ -4,6 +4,11 @@
 [![](https://img.shields.io/badge/汉化-视频教程-purple)](https://www.bilibili.com/video/BV1kg4y1H73b)
 [![](https://img.shields.io/badge/汉化-QQ交流群-purple)](https://jq.qq.com/?_wv=1027&k=wEbRm1eU)
 
+## 注意
+
+目前13号webui最新b08500c版本还不能使用汉化，好像是webui的汉化加载出错了，等越南人修复吧。
+想用汉化的请把webui退回到11号8ca50f8版本才可以使用。
+
 ## 解释说明
 
 此项目为[Stable Diffusion Web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)简体中文扩展
