@@ -4,16 +4,11 @@
 [![](https://img.shields.io/badge/汉化-视频教程-purple)](https://www.bilibili.com/video/BV1kg4y1H73b)
 [![](https://img.shields.io/badge/汉化-QQ交流群-purple)](https://jq.qq.com/?_wv=1027&k=wEbRm1eU)
 
-## 注意
-
-目前13号webui最新b08500c版本还不能使用汉化，好像是webui的汉化加载出错了，等越南人修复吧。
-想用汉化的请把webui退回到11号8ca50f8版本才可以使用。
-
 ## 解释说明
 
 此项目为[Stable Diffusion Web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)简体中文扩展
 
-当前版本为0512，即基于官方webui和自用插件的本地化模板，于5月12日之前的最新版本进行的汉化。
+当前版本为0722，即基于官方webui和自用插件的本地化模板，于7月22日之前的最新版本进行的汉化。
 
 本人精力有限不可能每个功能都体验过，然后根据具体功能来翻译，所以有翻译得不对或者更好的翻译请联系我。
 
@@ -22,28 +17,40 @@
 ## 包含以下扩展翻译
 
 [ControlNet](https://github.com/Mikubill/sd-webui-controlnet)
-版本：c9c8ca6e (Sun May 7 17:15:00 2023)
+版本：098f6cd8 (Tue Jul 18 05:06:14 2023)
 
-[openpose-editor](https://github.com/fkunn1326/openpose-editor)
-版本：23f3a144 (Tue May 9 13:29:40 2023)
+[openpose-editor](https://github.com/huchenlei/sd-webui-openpose-editor)
+版本：9ed77768 (Sun Jul 16 21:22:37 2023)
 
 [multidiffusion-upscaler](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111)
-版本：70ca3c77 (Wed Apr 5 10:57:07 2023)
-
-[dynamic-prompts](https://github.com/adieyal/sd-dynamic-prompts)
-版本：707fa9a1 (Thu Apr 6 18:31:57 2023)
+版本：de488810 (Sun Jun 18 21:39:44 2023)
 
 [artists-to-study](https://github.com/camenduru/stable-diffusion-webui-artists-to-study)
-版本：970d388e (Tue Feb 28 20:52:57 2023)
+版本：5cd19f68 (Mon Jun 26 08:38:08 2023)
 
 [dataset-tag-editor](https://github.com/toshiaki1729/stable-diffusion-webui-dataset-tag-editor)
-版本：43b0478f (Tue May 2 13:29:24 2023)
+版本：7a2f4c53 (Mon Jun 5 10:12:00 2023)
 
 [wd14-tagger](https://github.com/toriato/stable-diffusion-webui-wd14-tagger)
 版本：3ba3a735 (Sat Mar 25 20:32:37 2023)
 
 [ultimate-upscale](https://github.com/Coyote-A/ultimate-upscale-for-automatic1111)
-版本：756bb505 (Fri May 5 00:22:21 2023)
+版本：c99f382b (Tue Jun 13 04:29:35 2023)
+
+[lora-block-weight](https://github.com/hako-mikan/sd-webui-lora-block-weight)
+版本：eef051cc (Fri Jul 21 12:44:41 2023)
+
+[segment-anything](https://github.com/continue-revolution/sd-webui-segment-anything)
+版本：ffe26315 (Wed Jun 28 18:49:49 2023)
+
+[vectorstudio](https://github.com/GeorgLegato/stable-diffusion-webui-vectorstudio)
+版本：03535f64 (Sun May 28 14:27:48 2023)
+
+[wd14-tagger](https://github.com/toriato/stable-diffusion-webui-wd14-tagger)
+版本：99bf7d81 (Mon Jul 17 17:44:24 2023)
+
+[posex](https://github.com/hnmr293/posex)
+版本：292f92d5 (Wed May 3 08:59:57 2023)
 
 ## 安装说明
 
