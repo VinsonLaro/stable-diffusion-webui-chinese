@@ -80,4 +80,4 @@
 
 # Star History
 
-[![Star History](https://api.star-history.com/svg?repos=VinsonLaro/stable-diffusion-webui-chinese&Date&type=Date)](https://star-history.com/#PlexPt/awesome-chatgpt-prompts-zh&Date)
+[![Star History](https://api.star-history.com/svg?repos=VinsonLaro/stable-diffusion-webui-chinese&Date&type=Date)](https://star-history.com/#VinsonLaro/stable-diffusion-webui-chinese&Date)
