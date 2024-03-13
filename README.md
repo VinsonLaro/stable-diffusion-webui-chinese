@@ -69,6 +69,18 @@
 
 4.点击界面最上方的黄色按钮"Apply settings"，再点击右侧的"Reload UI"即可完成汉化
 
+## 其他
+
+自从开始玩AI绘画，一晃眼都过去快2年了。由于个人工作和懒惰的原因，23年10月更新以后今天(3月)才有空更新。
+
+从一开始的disco diffusion到stable diffusion，从SD1.5和waifu1.4，再到novelai泄露带来的爆火，还有lora以及controlnet的大规模应用和comfyUI的出现。AI绘画也算是摆脱了鬼图，逐渐可用商用，走进了大众的视野。
+
+去年年末以后我更关注的是LLM，自己和团队也在开发LLM相关的项目。对AI绘画这边的关注逐渐变少，之前C站上的每一个新出的lora我都会看过，我觉得优质lora都会点like，后面游戏公司裁员以后忙于生计以及个人电脑限制，启动SD的次数越来越少。
+
+个人觉得AI绘画的增速变慢，很难再出现像上面每个事件，都能让AI绘画上一新台阶的事情了。
+
+希望AGI早日实现。
+
 # Star History
 
 [![Star History](https://api.star-history.com/svg?repos=VinsonLaro/stable-diffusion-webui-chinese&Date&type=Date)](https://star-history.com/#VinsonLaro/stable-diffusion-webui-chinese&Date)
