@@ -1053,7 +1053,7 @@
     "Poor man's outpainting": "低质量画布补全",
     "Scale by": "等比缩放",
     "Max steps": "最大迭代步数",
-    "Add network to prompt": "将附加网络添加到提示",
+    "Add network to prompt": "将LoRA触发词添加提示词中",
     "Remove duplicated tag": "移除重复标签",
     "Choose mode:": "选择模式:",
     "Inversion steps": "逆向步骤",
