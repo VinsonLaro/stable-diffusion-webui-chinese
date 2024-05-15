@@ -1,0 +1,14 @@
+{
+    "i18n-ally.sourceLanguage": "Chinese-English-0220",
+    "i18n-ally.displayLanguage": "chinese",
+    "i18n-ally.enabledFrameworks": [
+        "custom"
+    ],
+    "i18n-ally.localesPaths": [
+        "localizations"
+    ],
+    "i18n-ally.editor.preferEditor": true,
+    "i18n-ally.keystyle": "nested",
+    "i18n-ally.disablePathParsing": true
+
+}
